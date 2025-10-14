@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freighter Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-freighter-api/5.0.0/index.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button:hover {
+            background: #059669;
+        }
+        .status {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Freighter Detection Test</h1>
+        <p>This simple page tests if Freighter is properly installed and accessible.</p>
+        
+        <button onclick="checkFreighter()">1. Check if Freighter is Available</button>
+        <button onclick="connectFreighter()">2. Try to Connect</button>
+        
+        <div id="status" class="status">
+            Click the buttons above to test Freighter...
+        </div>
+        
+        <h3>Troubleshooting:</h3>
+        <ul style="text-align: left;">
+            <li>Make sure Freighter extension is installed</li>
+            <li>Make sure Freighter is enabled in your browser</li>
+            <li>Try refreshing this page (Ctrl+Shift+R)</li>
+            <li>Make sure you're using Chrome/Brave/Edge</li>
+            <li>Check if Freighter icon appears in your extensions bar</li>
+        </ul>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const status = document.getElementById('status');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+            status.innerHTML += `<div class="${className}">${new Date().toLocaleTimeString()}: ${message}</div>`;
+            console.log(message);
+        }
+
+        function checkFreighter() {
+            document.getElementById('status').innerHTML = '';
+            log('Checking for Freighter...', 'info');
+            
+            if (typeof window.freighterApi === 'undefined') {
+                log('❌ window.freighterApi is undefined', 'error');
+                log('Freighter is NOT installed or not loaded yet', 'error');
+                log('Please install Freighter from: https://www.freighter.app/', 'warning');
+                return false;
+            } else {
+                log('✅ window.freighterApi is available!', 'success');
+                log('Freighter is installed correctly!', 'success');
+                
+                // Check available methods
+                log('Available methods: ' + Object.keys(window.freighterApi).join(', '), 'info');
+                return true;
+            }
+        }
+
+        async function connectFreighter() {
+            document.getElementById('status').innerHTML = '';
+            
+            if (!checkFreighter()) {
+                return;
+            }
+            
+            try {
+                log('Requesting access to Freighter...', 'info');
+                const result = await window.freighterApi.requestAccess();
+                
+                if (result.error) {
+                    log('❌ Error: ' + result.error, 'error');
+                } else if (result.address) {
+                    log('✅ Connected successfully!', 'success');
+                    log('Your address: ' + result.address, 'success');
+                    log('You can now use Stellarcade!', 'success');
+                } else {
+                    log('⚠️ Unexpected response: ' + JSON.stringify(result), 'warning');
+                }
+            } catch (err) {
+                log('❌ Exception: ' + err.message, 'error');
+                console.error(err);
+            }
+        }
+
+        // Auto-check on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('Page loaded. Checking Freighter automatically...', 'info');
+                checkFreighter();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
