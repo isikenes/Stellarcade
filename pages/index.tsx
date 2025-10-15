@@ -4,6 +4,7 @@ import Head from 'next/head';
 
 export default function Home() {
   const router = useRouter();
+  const [username, setUsername] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string>('');
   const [freighterInstalled, setFreighterInstalled] = useState(false);
@@ -15,8 +16,9 @@ export default function Home() {
 
     // Check if already connected
     const storedAddress = localStorage.getItem('walletAddress');
-    if (storedAddress) {
-      router.push('/main');
+    const storedUsername = localStorage.getItem('username');
+    if (storedAddress && storedUsername) {
+      router.push('/home');
     }
   }, [router]);
 
@@ -25,20 +27,16 @@ export default function Home() {
     let attempts = 0;
     const maxAttempts = 50; // 50 attempts * 100ms = 5 seconds
     
-    console.log('🔍 Starting Freighter detection... (waiting up to 5 seconds)');
     setIsChecking(true);
     
     const checkInterval = setInterval(() => {
       attempts++;
-      console.log(`Attempt ${attempts}/${maxAttempts}: Freighter available =`, !!window.freighterApi);
       
       if (typeof window !== 'undefined' && window.freighterApi) {
-        console.log('✅ Freighter detected!');
         setFreighterInstalled(true);
         setIsChecking(false);
         clearInterval(checkInterval);
       } else if (attempts >= maxAttempts) {
-        console.warn('⚠️ Freighter not detected after 5 seconds');
         setFreighterInstalled(false);
         setIsChecking(false);
         clearInterval(checkInterval);
@@ -47,6 +45,11 @@ export default function Home() {
   };
 
   const connectWallet = async () => {
+    if (!username.trim()) {
+      setError('Please enter a username');
+      return;
+    }
+
     setIsConnecting(true);
     setError('');
 
@@ -71,15 +74,14 @@ export default function Home() {
       }
 
       if (result.address) {
-        // Save address to localStorage
+        // Save address and username to localStorage
         localStorage.setItem('walletAddress', result.address);
-        console.log('Connected wallet:', result.address);
+        localStorage.setItem('username', username.trim());
 
-        // Redirect to main page
-        router.push('/main');
+        // Redirect to home page
+        router.push('/home');
       }
     } catch (err) {
-      console.error('Connection error:', err);
       setError(err instanceof Error ? err.message : 'Failed to connect wallet');
     } finally {
       setIsConnecting(false);
@@ -114,12 +116,32 @@ export default function Home() {
               </p>
             </div>
 
+            {/* Username Input */}
+            <div className="mb-6">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Choose Your Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your player name"
+                maxLength={20}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                disabled={isConnecting || isChecking}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                This name will appear on the leaderboard
+              </p>
+            </div>
+
             {/* Connect Button */}
             <button
               onClick={connectWallet}
-              disabled={isConnecting || isChecking}
+              disabled={isConnecting || isChecking || !username.trim()}
               className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all transform ${
-                isConnecting || isChecking
+                isConnecting || isChecking || !username.trim()
                   ? 'bg-gray-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 hover:scale-105 active:scale-95'
               } text-white shadow-lg`}

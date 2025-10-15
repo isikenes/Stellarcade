@@ -33,19 +33,14 @@ export default function Main() {
 
   const loadGameData = async () => {
     try {
-      console.log('Loading game data from blockchain...');
-      
       // Get top score
       const topScoreResult = await getTopScore();
       if (topScoreResult.success && topScoreResult.data) {
-        console.log('Top score data:', topScoreResult.data);
-        
         // Parse the PlayerScore structure
         if (topScoreResult.data && typeof topScoreResult.data === 'object') {
           const data = topScoreResult.data as any;
           if (data.score !== undefined) {
             setTopScore(data.score);
-            console.log('Set top score:', data.score);
           }
           if (data.player) {
             // Convert address to readable format
@@ -58,23 +53,18 @@ export default function Main() {
             }
           }
         }
-      } else {
-        console.log('No top score yet');
       }
 
       // Get last player
       const lastPlayerResult = await getLastPlayer();
       if (lastPlayerResult.success && lastPlayerResult.data) {
-        console.log('Last player data:', lastPlayerResult.data);
         const playerAddr = typeof lastPlayerResult.data === 'string' 
           ? lastPlayerResult.data 
           : lastPlayerResult.data.toString();
         setLastPlayer(playerAddr.slice(0, 8) + '...' + playerAddr.slice(-4));
-      } else {
-        console.log('No last player yet');
       }
     } catch (error) {
-      console.error('Error loading game data:', error);
+      // Silently fail
     }
   };
 
@@ -101,9 +91,7 @@ export default function Main() {
     setMessage(null);
 
     try {
-      console.log('Submitting score:', { player: playerName, score: scoreNum });
-      
-      const result = await submitScore(walletAddress, scoreNum);
+      const result = await submitScore(walletAddress, playerName, scoreNum);
       
       if (result.success) {
         setMessage({ type: 'success', text: `Score ${scoreNum} submitted successfully! Refreshing leaderboard...` });
@@ -120,7 +108,6 @@ export default function Main() {
         setMessage({ type: 'error', text: result.error || 'Failed to submit score' });
       }
     } catch (error) {
-      console.error('Submit score error:', error);
       setMessage({ 
         type: 'error', 
         text: error instanceof Error ? error.message : 'Failed to submit score' 
@@ -143,7 +130,6 @@ export default function Main() {
         setMessage({ type: 'error', text: result.error || 'Failed to claim reward' });
       }
     } catch (error) {
-      console.error('Claim reward error:', error);
       setMessage({ 
         type: 'error', 
         text: error instanceof Error ? error.message : 'Failed to claim reward' 
