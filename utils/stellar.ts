@@ -13,12 +13,13 @@ export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || 'YOUR_CONTRACT
 const sorobanServer = new StellarSdk.SorobanRpc.Server(SOROBAN_RPC_URL);
 
 /**
- * Submit a score to the smart contract with username
+ * Submit a score to the smart contract with username and game type
  */
 export async function submitScore(
   playerAddress: string,
   username: string,
-  score: number
+  score: number,
+  gameType: 'snake' | 'pong'
 ): Promise<ContractResponse> {
   try {
     // Load account from Soroban RPC
@@ -27,7 +28,10 @@ export async function submitScore(
     // Build the contract call
     const contract = new StellarSdk.Contract(CONTRACT_ID);
     
-    // Build transaction with contract call (now with username)
+    // Convert game type to Symbol
+    const gameSymbol = StellarSdk.nativeToScVal(gameType, { type: 'symbol' });
+    
+    // Build transaction with contract call (now with username and game type)
     const builtTransaction = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: StellarSdk.BASE_FEE,
       networkPassphrase: NETWORK_PASSPHRASE,
@@ -37,7 +41,8 @@ export async function submitScore(
           'submit_score',
           StellarSdk.Address.fromString(playerAddress).toScVal(),
           StellarSdk.nativeToScVal(username, { type: 'string' }),
-          StellarSdk.nativeToScVal(score, { type: 'u32' })
+          StellarSdk.nativeToScVal(score, { type: 'u32' }),
+          gameSymbol
         )
       )
       .setTimeout(30)
@@ -93,9 +98,9 @@ export async function submitScore(
 }
 
 /**
- * Get the top score from the contract
+ * Get the top score from the contract for a specific game
  */
-export async function getTopScore(): Promise<ContractResponse> {
+export async function getTopScore(gameType: 'snake' | 'pong'): Promise<ContractResponse> {
   try {
     // We need a source account for simulation (can be any funded account)
     // Using a public testnet account for read-only operations
@@ -103,13 +108,14 @@ export async function getTopScore(): Promise<ContractResponse> {
     const sourceAccount = new StellarSdk.Account(sourceKeypair.publicKey(), '0');
     
     const contract = new StellarSdk.Contract(CONTRACT_ID);
+    const gameSymbol = StellarSdk.nativeToScVal(gameType, { type: 'symbol' });
     
     // Build transaction to call get_top_score
     const builtTransaction = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: StellarSdk.BASE_FEE,
       networkPassphrase: NETWORK_PASSPHRASE,
     })
-      .addOperation(contract.call('get_top_score'))
+      .addOperation(contract.call('get_top_score', gameSymbol))
       .setTimeout(30)
       .build();
 
@@ -148,20 +154,21 @@ export async function getTopScore(): Promise<ContractResponse> {
 }
 
 /**
- * Get the last player who submitted
+ * Get the last player who submitted for a specific game
  */
-export async function getLastPlayer(): Promise<ContractResponse> {
+export async function getLastPlayer(gameType: 'snake' | 'pong'): Promise<ContractResponse> {
   try {
     const sourceKeypair = StellarSdk.Keypair.random();
     const sourceAccount = new StellarSdk.Account(sourceKeypair.publicKey(), '0');
     
     const contract = new StellarSdk.Contract(CONTRACT_ID);
+    const gameSymbol = StellarSdk.nativeToScVal(gameType, { type: 'symbol' });
     
     const builtTransaction = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: StellarSdk.BASE_FEE,
       networkPassphrase: NETWORK_PASSPHRASE,
     })
-      .addOperation(contract.call('get_last_player'))
+      .addOperation(contract.call('get_last_player', gameSymbol))
       .setTimeout(30)
       .build();
 
@@ -198,12 +205,13 @@ export async function getLastPlayer(): Promise<ContractResponse> {
 }
 
 /**
- * Claim reward (if player has top score)
+ * Claim reward (if player has top score) for a specific game
  */
-export async function claimReward(playerAddress: string): Promise<ContractResponse> {
+export async function claimReward(playerAddress: string, gameType: 'snake' | 'pong'): Promise<ContractResponse> {
   try {
     const sourceAccount = await sorobanServer.getAccount(playerAddress);
     const contract = new StellarSdk.Contract(CONTRACT_ID);
+    const gameSymbol = StellarSdk.nativeToScVal(gameType, { type: 'symbol' });
     
     const builtTransaction = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: StellarSdk.BASE_FEE,
@@ -212,7 +220,8 @@ export async function claimReward(playerAddress: string): Promise<ContractRespon
       .addOperation(
         contract.call(
           'claim_reward',
-          StellarSdk.Address.fromString(playerAddress).toScVal()
+          StellarSdk.Address.fromString(playerAddress).toScVal(),
+          gameSymbol
         )
       )
       .setTimeout(30)
@@ -250,20 +259,21 @@ export async function claimReward(playerAddress: string): Promise<ContractRespon
 }
 
 /**
- * Get the full leaderboard (top 10 scores)
+ * Get the full leaderboard (top 10 scores) for a specific game
  */
-export async function getLeaderboard(): Promise<Array<{ address: string; username: string; score: number }>> {
+export async function getLeaderboard(gameType: 'snake' | 'pong'): Promise<Array<{ address: string; username: string; score: number }>> {
   try {
     const sourceKeypair = StellarSdk.Keypair.random();
     const sourceAccount = new StellarSdk.Account(sourceKeypair.publicKey(), '0');
     
     const contract = new StellarSdk.Contract(CONTRACT_ID);
+    const gameSymbol = StellarSdk.nativeToScVal(gameType, { type: 'symbol' });
     
     const builtTransaction = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: StellarSdk.BASE_FEE,
       networkPassphrase: NETWORK_PASSPHRASE,
     })
-      .addOperation(contract.call('get_leaderboard'))
+      .addOperation(contract.call('get_leaderboard', gameSymbol))
       .setTimeout(30)
       .build();
 
@@ -297,20 +307,21 @@ export async function getLeaderboard(): Promise<Array<{ address: string; usernam
 }
 
 /**
- * Check if reward has been claimed
+ * Check if reward has been claimed for a specific game
  */
-export async function hasClaimedReward(): Promise<boolean> {
+export async function hasClaimedReward(gameType: 'snake' | 'pong'): Promise<boolean> {
   try {
     const sourceKeypair = StellarSdk.Keypair.random();
     const sourceAccount = new StellarSdk.Account(sourceKeypair.publicKey(), '0');
     
     const contract = new StellarSdk.Contract(CONTRACT_ID);
+    const gameSymbol = StellarSdk.nativeToScVal(gameType, { type: 'symbol' });
     
     const builtTransaction = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: StellarSdk.BASE_FEE,
       networkPassphrase: NETWORK_PASSPHRASE,
     })
-      .addOperation(contract.call('has_claimed_reward'))
+      .addOperation(contract.call('has_claimed_reward', gameSymbol))
       .setTimeout(30)
       .build();
 

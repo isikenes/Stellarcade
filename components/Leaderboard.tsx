@@ -11,9 +11,10 @@ interface LeaderboardEntry {
 
 interface LeaderboardProps {
   currentUsername: string;
+  gameType: 'snake' | 'pong';
 }
 
-export default function Leaderboard({ currentUsername }: LeaderboardProps) {
+export default function Leaderboard({ currentUsername, gameType }: LeaderboardProps) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
@@ -25,12 +26,12 @@ export default function Leaderboard({ currentUsername }: LeaderboardProps) {
     const address = localStorage.getItem('walletAddress') || '';
     setCurrentUserAddress(address);
     loadLeaderboard();
-  }, []);
+  }, [gameType]); // Added gameType to dependencies
 
   const loadLeaderboard = async () => {
     setIsLoading(true);
     try {
-      const data = await getLeaderboard();
+      const data = await getLeaderboard(gameType);
       const userAddress = localStorage.getItem('walletAddress') || '';
       const currentUser = localStorage.getItem('username') || '';
       
@@ -45,7 +46,7 @@ export default function Leaderboard({ currentUsername }: LeaderboardProps) {
       setEntries(formattedEntries);
       
       // Check if reward has been claimed
-      const claimed = await hasClaimedReward();
+      const claimed = await hasClaimedReward(gameType);
       setRewardClaimed(claimed);
     } catch (error) {
       // Silently fail
@@ -68,7 +69,7 @@ export default function Leaderboard({ currentUsername }: LeaderboardProps) {
 
     setIsClaiming(true);
     try {
-      await claimReward(currentUserAddress);
+      await claimReward(currentUserAddress, gameType);
       
       // Wait for blockchain to process, then refresh
       await new Promise(resolve => setTimeout(resolve, 2000));

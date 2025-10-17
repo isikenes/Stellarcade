@@ -284,7 +284,7 @@ export default function SnakeGame() {
 
     setIsSubmitting(true);
     try {
-      await submitScore(walletAddress, username, score);
+      await submitScore(walletAddress, username, score, 'snake');
       setScoreSubmitted(true);
       
       // Wait for blockchain to process, then refresh leaderboard
@@ -393,7 +393,7 @@ export default function SnakeGame() {
 
             {/* Leaderboard Sidebar */}
             <div className="lg:col-span-1">
-              <Leaderboard key={leaderboardKey} currentUsername={username} />
+              <Leaderboard key={leaderboardKey} currentUsername={username} gameType="snake" />
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, Vec};
 
 // Data structure to store player score with username
 #[contracttype]
@@ -10,12 +10,12 @@ pub struct PlayerScore {
     pub score: u32,
 }
 
-// Storage keys
+// Storage keys - now includes game type
 #[contracttype]
 pub enum DataKey {
-    Leaderboard,   // Stores vector of top scores
-    LastPlayer,    // Stores the last player who submitted
-    RewardClaimed, // Tracks if the current top player has claimed
+    Leaderboard(Symbol),   // Stores vector of top scores per game
+    LastPlayer(Symbol),    // Stores the last player who submitted per game
+    RewardClaimed(Symbol), // Tracks if the current top player has claimed per game
 }
 
 #[contract]
@@ -23,24 +23,24 @@ pub struct ArcadeRewardContract;
 
 #[contractimpl]
 impl ArcadeRewardContract {
-    /// Submit a score for a player with username
-    /// Saves the score and updates leaderboard
-    pub fn submit_score(env: Env, player: Address, username: String, score: u32) {
+    /// Submit a score for a player with username for a specific game
+    /// Saves the score and updates game-specific leaderboard
+    pub fn submit_score(env: Env, player: Address, username: String, score: u32, game: Symbol) {
         // Verify the player is the caller
         player.require_auth();
         
-        // Store last player
-        env.storage().persistent().set(&DataKey::LastPlayer, &player);
+        // Store last player for this game
+        env.storage().persistent().set(&DataKey::LastPlayer(game.clone()), &player);
         
         // Get the current top player BEFORE updating leaderboard
-        let old_top_player: Option<Address> = Self::get_top_score(env.clone())
+        let old_top_player: Option<Address> = Self::get_top_score(env.clone(), game.clone())
             .map(|top_score| top_score.player);
         
-        // Get current leaderboard (or create empty one)
+        // Get current leaderboard for this game (or create empty one)
         let mut leaderboard: Vec<PlayerScore> = env
             .storage()
             .persistent()
-            .get(&DataKey::Leaderboard)
+            .get(&DataKey::Leaderboard(game.clone()))
             .unwrap_or(Vec::new(&env));
         
         // Create new player score entry
@@ -77,8 +77,8 @@ impl ArcadeRewardContract {
             leaderboard = top_10;
         }
         
-        // Save updated leaderboard
-        env.storage().persistent().set(&DataKey::Leaderboard, &leaderboard);
+        // Save updated leaderboard for this game
+        env.storage().persistent().set(&DataKey::Leaderboard(game.clone()), &leaderboard);
         
         // Reset reward claimed flag ONLY if the #1 player changed
         if !leaderboard.is_empty() {
@@ -89,7 +89,7 @@ impl ArcadeRewardContract {
                 Some(old_player) => {
                     // If the top player changed, reset the claim flag
                     if old_player != new_top_player {
-                        env.storage().persistent().remove(&DataKey::RewardClaimed);
+                        env.storage().persistent().remove(&DataKey::RewardClaimed(game));
                     }
                     // If same player is still #1, keep the claim flag as-is
                 }
@@ -100,20 +100,20 @@ impl ArcadeRewardContract {
         }
     }
 
-    /// Get the full leaderboard (top 10 players)
-    pub fn get_leaderboard(env: Env) -> Vec<PlayerScore> {
+    /// Get the full leaderboard (top 10 players) for a specific game
+    pub fn get_leaderboard(env: Env, game: Symbol) -> Vec<PlayerScore> {
         env.storage()
             .persistent()
-            .get(&DataKey::Leaderboard)
+            .get(&DataKey::Leaderboard(game))
             .unwrap_or(Vec::new(&env))
     }
 
-    /// Get the top score and the player who achieved it
-    pub fn get_top_score(env: Env) -> Option<PlayerScore> {
+    /// Get the top score and the player who achieved it for a specific game
+    pub fn get_top_score(env: Env, game: Symbol) -> Option<PlayerScore> {
         let leaderboard: Vec<PlayerScore> = env
             .storage()
             .persistent()
-            .get(&DataKey::Leaderboard)
+            .get(&DataKey::Leaderboard(game))
             .unwrap_or(Vec::new(&env));
         
         if leaderboard.is_empty() {
@@ -123,36 +123,36 @@ impl ArcadeRewardContract {
         }
     }
 
-    /// Get the last player who submitted a score
-    pub fn get_last_player(env: Env) -> Option<Address> {
-        env.storage().persistent().get(&DataKey::LastPlayer)
+    /// Get the last player who submitted a score for a specific game
+    pub fn get_last_player(env: Env, game: Symbol) -> Option<Address> {
+        env.storage().persistent().get(&DataKey::LastPlayer(game))
     }
 
-    /// Claim reward (marks reward as claimed)
+    /// Claim reward for a specific game (marks reward as claimed)
     /// In production, this would transfer 1 XLM to the winner
     /// For now, it tracks that the reward was claimed to prevent double-claiming
-    pub fn claim_reward(env: Env, player: Address) -> bool {
+    pub fn claim_reward(env: Env, player: Address, game: Symbol) -> bool {
         player.require_auth();
         
-        // Check if reward was already claimed
+        // Check if reward was already claimed for this game
         let already_claimed: bool = env
             .storage()
             .persistent()
-            .get(&DataKey::RewardClaimed)
+            .get(&DataKey::RewardClaimed(game.clone()))
             .unwrap_or(false);
         
         if already_claimed {
             return false; // Already claimed
         }
         
-        // Check if player has the top score
-        let top_score: Option<PlayerScore> = Self::get_top_score(env.clone());
+        // Check if player has the top score for this game
+        let top_score: Option<PlayerScore> = Self::get_top_score(env.clone(), game.clone());
         
         match top_score {
             Some(top) => {
                 if top.player == player {
-                    // Mark reward as claimed
-                    env.storage().persistent().set(&DataKey::RewardClaimed, &true);
+                    // Mark reward as claimed for this game
+                    env.storage().persistent().set(&DataKey::RewardClaimed(game), &true);
                     
                     // In production, this would transfer 1 XLM (10_000_000 stroops)
                     // using env.token().transfer() or similar
@@ -166,11 +166,11 @@ impl ArcadeRewardContract {
         }
     }
     
-    /// Check if the current top player has claimed their reward
-    pub fn has_claimed_reward(env: Env) -> bool {
+    /// Check if the current top player has claimed their reward for a specific game
+    pub fn has_claimed_reward(env: Env, game: Symbol) -> bool {
         env.storage()
             .persistent()
-            .get(&DataKey::RewardClaimed)
+            .get(&DataKey::RewardClaimed(game))
             .unwrap_or(false)
     }
 }
@@ -178,7 +178,7 @@ impl ArcadeRewardContract {
 #[cfg(test)]
 mod test {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Address, Env, String};
+    use soroban_sdk::{testutils::Address as _, symbol_short, Address, Env, String};
 
     #[test]
     fn test_submit_and_get_score() {
@@ -188,28 +188,29 @@ mod test {
 
         let player1 = Address::generate(&env);
         let player2 = Address::generate(&env);
+        let snake_game = symbol_short!("snake");
 
         // Submit first score
         env.mock_all_auths();
-        client.submit_score(&player1, &String::from_str(&env, "Alice"), &100);
+        client.submit_score(&player1, &String::from_str(&env, "Alice"), &100, &snake_game);
 
         // Check top score
-        let top = client.get_top_score().unwrap();
+        let top = client.get_top_score(&snake_game).unwrap();
         assert_eq!(top.score, 100);
         assert_eq!(top.player, player1);
 
         // Submit higher score
-        client.submit_score(&player2, &String::from_str(&env, "Bob"), &200);
-        let top = client.get_top_score().unwrap();
+        client.submit_score(&player2, &String::from_str(&env, "Bob"), &200, &snake_game);
+        let top = client.get_top_score(&snake_game).unwrap();
         assert_eq!(top.score, 200);
         assert_eq!(top.player, player2);
 
         // Check last player
-        let last = client.get_last_player().unwrap();
+        let last = client.get_last_player(&snake_game).unwrap();
         assert_eq!(last, player2);
         
         // Check leaderboard
-        let leaderboard = client.get_leaderboard();
+        let leaderboard = client.get_leaderboard(&snake_game);
         assert_eq!(leaderboard.len(), 2);
         assert_eq!(leaderboard.get(0).unwrap().score, 200); // Highest first
     }
@@ -221,12 +222,40 @@ mod test {
         let client = ArcadeRewardContractClient::new(&env, &contract_id);
 
         let player = Address::generate(&env);
+        let pong_game = symbol_short!("pong");
 
         env.mock_all_auths();
-        client.submit_score(&player, &String::from_str(&env, "Winner"), &100);
+        client.submit_score(&player, &String::from_str(&env, "Winner"), &100, &pong_game);
 
         // Top player should be able to claim
-        let can_claim = client.claim_reward(&player);
+        let can_claim = client.claim_reward(&player, &pong_game);
         assert_eq!(can_claim, true);
+    }
+    
+    #[test]
+    fn test_separate_leaderboards() {
+        let env = Env::default();
+        let contract_id = env.register_contract(None, ArcadeRewardContract);
+        let client = ArcadeRewardContractClient::new(&env, &contract_id);
+
+        let player1 = Address::generate(&env);
+        let player2 = Address::generate(&env);
+        let snake_game = symbol_short!("snake");
+        let pong_game = symbol_short!("pong");
+
+        env.mock_all_auths();
+        
+        // Submit scores to different games
+        client.submit_score(&player1, &String::from_str(&env, "Alice"), &100, &snake_game);
+        client.submit_score(&player2, &String::from_str(&env, "Bob"), &200, &pong_game);
+
+        // Check each leaderboard is separate
+        let snake_top = client.get_top_score(&snake_game).unwrap();
+        assert_eq!(snake_top.score, 100);
+        assert_eq!(snake_top.player, player1);
+        
+        let pong_top = client.get_top_score(&pong_game).unwrap();
+        assert_eq!(pong_top.score, 200);
+        assert_eq!(pong_top.player, player2);
     }
 }

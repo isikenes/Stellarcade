@@ -36,18 +36,11 @@ export default function HomePage() {
       available: true,
     },
     {
-      id: 'space',
-      name: 'Space Invaders',
-      icon: '👾',
-      description: 'Coming soon',
-      available: false,
-    },
-    {
       id: 'pong',
       name: 'Pong',
       icon: '🏓',
-      description: 'Coming soon',
-      available: false,
+      description: 'Classic pong — play against the AI',
+      available: true,
     },
     {
       id: 'tetris',
@@ -104,7 +97,7 @@ export default function HomePage() {
           </div>
 
           {/* Games Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {games.map((game) => (
               <button
                 key={game.id}
