@@ -1,9 +1,6 @@
 # 🎮 Stellarcade - Blockchain Arcade Games Platform
 
-<!-- Add your demo GIF here -->
 ![Stellarcade Demo](./public/demo.gif)
-<!-- Alternative if hosting on GitHub: -->
-<!-- ![Stellarcade Demo](https://github.com/yourusername/stellarcade/blob/main/demo.gif) -->
 
 A decentralized arcade gaming platform built with Next.js, TypeScript, Tailwind CSS, and Stellar Soroban smart contracts. Play classic arcade games and compete on blockchain-powered leaderboards!
 
@@ -210,7 +207,6 @@ Tests include:
 - [ ] Daily/weekly leaderboards
 - [ ] NFT achievements
 - [ ] Multiplayer modes
-- [ ] Mobile responsive design
 - [ ] More games (Space Invaders, Breakout, etc.)
 
 ## 📊 Game Statistics Storage
