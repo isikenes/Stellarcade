@@ -11,7 +11,7 @@ interface LeaderboardEntry {
 
 interface LeaderboardProps {
   currentUsername: string;
-  gameType: 'snake' | 'pong';
+  gameType: 'snake' | 'pong' | 'tetris';
 }
 
 export default function Leaderboard({ currentUsername, gameType }: LeaderboardProps) {
@@ -72,7 +72,7 @@ export default function Leaderboard({ currentUsername, gameType }: LeaderboardPr
       await claimReward(currentUserAddress, gameType);
       
       // Wait for blockchain to process, then refresh
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2500));
       await loadLeaderboard();
     } catch (error) {
       // Silently fail

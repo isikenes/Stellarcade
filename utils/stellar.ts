@@ -19,7 +19,7 @@ export async function submitScore(
   playerAddress: string,
   username: string,
   score: number,
-  gameType: 'snake' | 'pong'
+  gameType: 'snake' | 'pong' | 'tetris'
 ): Promise<ContractResponse> {
   try {
     // Load account from Soroban RPC
@@ -100,7 +100,7 @@ export async function submitScore(
 /**
  * Get the top score from the contract for a specific game
  */
-export async function getTopScore(gameType: 'snake' | 'pong'): Promise<ContractResponse> {
+export async function getTopScore(gameType: 'snake' | 'pong' | 'tetris'): Promise<ContractResponse> {
   try {
     // We need a source account for simulation (can be any funded account)
     // Using a public testnet account for read-only operations
@@ -156,7 +156,7 @@ export async function getTopScore(gameType: 'snake' | 'pong'): Promise<ContractR
 /**
  * Get the last player who submitted for a specific game
  */
-export async function getLastPlayer(gameType: 'snake' | 'pong'): Promise<ContractResponse> {
+export async function getLastPlayer(gameType: 'snake' | 'pong' | 'tetris'): Promise<ContractResponse> {
   try {
     const sourceKeypair = StellarSdk.Keypair.random();
     const sourceAccount = new StellarSdk.Account(sourceKeypair.publicKey(), '0');
@@ -207,7 +207,7 @@ export async function getLastPlayer(gameType: 'snake' | 'pong'): Promise<Contrac
 /**
  * Claim reward (if player has top score) for a specific game
  */
-export async function claimReward(playerAddress: string, gameType: 'snake' | 'pong'): Promise<ContractResponse> {
+export async function claimReward(playerAddress: string, gameType: 'snake' | 'pong' | 'tetris'): Promise<ContractResponse> {
   try {
     const sourceAccount = await sorobanServer.getAccount(playerAddress);
     const contract = new StellarSdk.Contract(CONTRACT_ID);
@@ -261,7 +261,7 @@ export async function claimReward(playerAddress: string, gameType: 'snake' | 'po
 /**
  * Get the full leaderboard (top 10 scores) for a specific game
  */
-export async function getLeaderboard(gameType: 'snake' | 'pong'): Promise<Array<{ address: string; username: string; score: number }>> {
+export async function getLeaderboard(gameType: 'snake' | 'pong' | 'tetris'): Promise<Array<{ address: string; username: string; score: number }>> {
   try {
     const sourceKeypair = StellarSdk.Keypair.random();
     const sourceAccount = new StellarSdk.Account(sourceKeypair.publicKey(), '0');
@@ -309,7 +309,7 @@ export async function getLeaderboard(gameType: 'snake' | 'pong'): Promise<Array<
 /**
  * Check if reward has been claimed for a specific game
  */
-export async function hasClaimedReward(gameType: 'snake' | 'pong'): Promise<boolean> {
+export async function hasClaimedReward(gameType: 'snake' | 'pong' | 'tetris'): Promise<boolean> {
   try {
     const sourceKeypair = StellarSdk.Keypair.random();
     const sourceAccount = new StellarSdk.Account(sourceKeypair.publicKey(), '0');

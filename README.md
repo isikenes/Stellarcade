@@ -1,19 +1,33 @@
-# 🎮 Stellarcade - Minimal Arcade Reward dApp
+# 🎮 Stellarcade - Blockchain Arcade Games Platform
 
-A minimal arcade reward dApp built with Next.js (TypeScript), Tailwind CSS, and Stellar Soroban.
+<!-- Add your demo GIF here -->
+![Stellarcade Demo](./public/demo.gif)
+<!-- Alternative if hosting on GitHub: -->
+<!-- ![Stellarcade Demo](https://github.com/yourusername/stellarcade/blob/main/demo.gif) -->
 
-## 🚀 Features
+A decentralized arcade gaming platform built with Next.js, TypeScript, Tailwind CSS, and Stellar Soroban smart contracts. Play classic arcade games and compete on blockchain-powered leaderboards!
 
-- ✅ **Freighter Wallet Integration**: Connect/disconnect with window.freighterApi
-- ✅ **Two Pages**:
-  - `index.tsx`: Wallet connection page with redirect to /main
-  - `main.tsx`: Arcade UI with score submission and leaderboard
-- ✅ **Soroban Smart Contract**: 
-  - `submit_score(address, score)` - Save player scores
-  - `get_top_score()` - Get highest score and player
-  - `get_last_player()` - Get last player who submitted
-  - `claim_reward(address)` - Claim reward for top player
-- ✅ **Stellar SDK Integration**: Call contract functions on testnet with Freighter signing
+## 🎯 Features
+
+### 🎮 **Three Classic Games**
+- **🐍 Snake** - Classic snake game (10 points per food)
+- **🏓 Pong** - Play against AI (10 points per paddle hit, displayed as ×10)
+- **🧱 Tetris** - Stack and clear lines (progressive difficulty)
+
+### 🔗 **Blockchain Integration**
+- ✅ Freighter Wallet connection
+- ✅ Username-based player profiles
+- ✅ Game-specific leaderboards (separate for each game)
+- ✅ Top 10 rankings stored on Stellar blockchain
+- ✅ Reward claiming system for #1 players
+- ✅ Double-claim prevention
+
+### 🏆 **Leaderboard System**
+- Independent leaderboards for Snake, Pong, and Tetris
+- Top 10 scores per game
+- Medal indicators (🥇🥈🥉) for top 3
+- Current user highlighting
+- Real-time score submission
 
 ## 📁 Project Structure
 
@@ -21,15 +35,20 @@ A minimal arcade reward dApp built with Next.js (TypeScript), Tailwind CSS, and 
 Stellarcade/
 ├── contract/              # Soroban smart contract (Rust)
 │   ├── src/
-│   │   └── lib.rs        # Contract implementation
+│   │   └── lib.rs        # Game-specific leaderboard contract
 │   ├── Cargo.toml
 │   └── README.md
 ├── pages/                 # Next.js pages
 │   ├── _app.tsx          # App wrapper
-│   ├── index.tsx         # Wallet connect page
-│   └── main.tsx          # Main arcade UI
+│   ├── index.tsx         # Username + Wallet connect
+│   ├── home.tsx          # Game selection hub
+│   ├── snake.tsx         # Snake game
+│   ├── pong.tsx          # Pong game
+│   └── tetris.tsx        # Tetris game
+├── components/
+│   └── Leaderboard.tsx   # Reusable leaderboard component
 ├── utils/
-│   └── stellar.ts        # Stellar SDK integration
+│   └── stellar.ts        # Stellar SDK + Soroban integration
 ├── types/
 │   ├── freighter.d.ts    # Freighter API types
 │   └── contract.ts       # Contract types
@@ -39,6 +58,12 @@ Stellarcade/
 ```
 
 ## 🛠️ Setup Instructions
+
+### Prerequisites
+- Node.js 18+ and npm
+- Rust and Cargo
+- Stellar CLI (`stellar-cli`)
+- Freighter Wallet browser extension
 
 ### 1. Install Dependencies
 
@@ -57,31 +82,24 @@ cargo build --target wasm32-unknown-unknown --release
 
 ### 3. Deploy to Testnet
 
-Make sure you have `stellar-cli` installed and configured. Deploy the contract:
+Deploy the contract using Stellar CLI:
 
 ```powershell
-stellar contract deploy `
-  --wasm target/wasm32-unknown-unknown/release/arcade_reward.wasm `
-  --source alice `
-  --network testnet `
-  --alias arcade_reward
+cd contract
+stellar contract deploy --wasm target\wasm32-unknown-unknown\release\arcade_reward.wasm --source alice --network testnet
 ```
 
-This will return a contract ID (starts with 'C').
+This will return a contract ID like: `CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB`
 
 ### 4. Configure Environment
 
-Copy the example environment file:
+Create `.env.local` file in the root directory:
 
-```powershell
-Copy-Item .env.example .env.local
+```bash
+NEXT_PUBLIC_CONTRACT_ID=YOUR_CONTRACT_ID_HERE
 ```
 
-Edit `.env.local` and add your contract ID:
-
-```
-NEXT_PUBLIC_CONTRACT_ID=CACDYF3CYMJEJTIVFESQYZTN67GO2R5D5IUABTCUG3HXQSRXCSOROBAN
-```
+Replace `YOUR_CONTRACT_ID_HERE` with the contract ID from step 3.
 
 ### 5. Run Development Server
 
@@ -89,74 +107,144 @@ NEXT_PUBLIC_CONTRACT_ID=CACDYF3CYMJEJTIVFESQYZTN67GO2R5D5IUABTCUG3HXQSRXCSOROBAN
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
-## 🎮 How to Use
+## 🎮 How to Play
 
-1. **Install Freighter Wallet**: Get it from [freighter.app](https://www.freighter.app/)
-2. **Connect Wallet**: Click "Connect Freighter Wallet" on the home page
-3. **Submit Score**: Enter your player name and score, then submit
-4. **View Leaderboard**: See the top score and last player
-5. **Claim Reward**: If you have the top score, click "Claim Reward"
+### Getting Started
+1. **Install Freighter**: Download from [freighter.app](https://www.freighter.app/)
+2. **Enter Username**: Choose your player name
+3. **Connect Wallet**: Connect your Freighter wallet
+4. **Select Game**: Choose from Snake, Pong, or Tetris
+5. **Play & Submit**: Beat your high score and submit to blockchain
 
-## 🧪 Testing the Contract
+### Game Controls
 
-Run tests:
+#### 🐍 Snake
+- **Arrow Keys** or **WASD**: Change direction
+- **Space**: Pause/Resume
+- Score: 10 points per food eaten
 
-```powershell
-cd contract
-cargo test
-```
+#### 🏓 Pong  
+- **Arrow Keys** or **A/D**: Move paddle left/right
+- **Space**: Start game
+- Score: 10 points per successful ball deflection (displayed ×10)
+- AI opponent with perfect tracking
 
-## 📝 Contract Functions
+#### 🧱 Tetris
+- **Arrow Keys** or **WASD**: Move and rotate pieces
+- **Space**: Hard drop
+- **P**: Pause/Resume
+- Scoring: 40/100/300/1200 points for 1/2/3/4 lines (×level)
 
-### `submit_score(player: Address, score: u32)`
-Submits a score for a player. Updates top score if higher.
+## 📝 Smart Contract Functions
 
-### `get_top_score() -> Option<PlayerScore>`
-Returns the highest score and the player who achieved it.
+### `submit_score(player: Address, username: String, score: u32, game: Symbol)`
+Submits a score for a specific game. Updates the game's top 10 leaderboard.
 
-### `get_last_player() -> Option<Address>`
-Returns the address of the last player who submitted a score.
+### `get_leaderboard(game: Symbol) -> Vec<PlayerScore>`
+Returns the top 10 scores for the specified game.
 
-### `claim_reward(player: Address) -> bool`
-Allows the top player to claim their reward. Returns true if successful.
+### `get_top_score(game: Symbol) -> Option<PlayerScore>`
+Returns the #1 player for the specified game.
+
+### `claim_reward(player: Address, game: Symbol) -> bool`
+Allows the top player to claim their reward for a specific game.
+
+### `has_claimed_reward(game: Symbol) -> bool`
+Checks if the current #1 player has claimed their reward.
+
+### `get_last_player(game: Symbol) -> Option<Address>`
+Returns the last player who submitted a score for a game.
 
 ## 🌐 Network Information
 
 - **Network**: Stellar Testnet
 - **Horizon URL**: https://horizon-testnet.stellar.org
 - **Soroban RPC**: https://soroban-testnet.stellar.org
+- **Current Contract**: `CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB`
 
-## 📚 Documentation References
+## 🧪 Testing the Contract
 
-- [Freighter Wallet Docs](./FreighterWalletDocs.md)
-- [Stellar Deploy Guide](./StellarDeploy.md)
-- [Product Requirements](./pdr.md)
+Run contract tests:
 
-## ⚠️ Important Notes
+```powershell
+cd contract
+cargo test
+```
 
-- This is a **minimal implementation** for learning purposes
-- No complex logic, fee calculation, or access control
-- Uses Stellar Testnet (not production)
-- Contract storage uses `persistent()` storage
-- All transactions are logged to console for debugging
+Tests include:
+- Score submission and leaderboard updates
+- Separate game leaderboards
+- Reward claiming
+- Double-claim prevention
 
-## 🔧 Scripts
+## 🎨 Tech Stack
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
+### Frontend
+- **Next.js 14** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **Canvas API** - Game rendering
 
-## 🎯 Next Steps (Deployment Phase)
+### Blockchain
+- **Stellar Soroban** - Smart contracts
+- **Stellar SDK** - Blockchain interaction
+- **Freighter API** - Wallet integration
 
-Wait for your prompt to proceed with:
-- Contract optimization
-- Production deployment
-- Network configuration
-- Advanced features
+### Smart Contract
+- **Rust** - Contract language
+- **Soroban SDK 21.0.0** - Contract framework
+
+## 🔒 Security Features
+
+- Username validation and wallet verification
+- Prevents double score submission
+- Prevents double reward claiming
+- Top player changes reset claim status
+- Client-side high score persistence
+
+## � Future Enhancements
+
+- [ ] Prize pool funding (10 XLM testnet rewards)
+- [ ] Daily/weekly leaderboards
+- [ ] NFT achievements
+- [ ] Multiplayer modes
+- [ ] Mobile responsive design
+- [ ] More games (Space Invaders, Breakout, etc.)
+
+## 📊 Game Statistics Storage
+
+Each game stores:
+- Player address
+- Username
+- Score
+- Timestamp (implicit in blockchain)
+
+Storage is separated by game type using Soroban's Symbol type.
+
+## 🐛 Known Issues
+
+- None currently reported! 🎉
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
+
+This project is open source and available under the MIT License.
+
+## 🙏 Acknowledgments
+
+- Stellar Development Foundation for Soroban
+- Freighter Wallet team
+- Next.js and React communities
 
 ---
 
-Built with ❤️ on Stellar Blockchain
+**Built with ❤️ on Stellar Blockchain**

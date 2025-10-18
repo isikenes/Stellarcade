@@ -290,7 +290,7 @@ export default function SnakeGame() {
       // Wait for blockchain to process, then refresh leaderboard
       setTimeout(() => {
         setLeaderboardKey(prev => prev + 1);
-      }, 2000);
+      }, 2500);
     } catch (error) {
       setScoreSubmitted(false);
     } finally {

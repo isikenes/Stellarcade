@@ -46,8 +46,8 @@ export default function HomePage() {
       id: 'tetris',
       name: 'Tetris',
       icon: '🧱',
-      description: 'Coming soon',
-      available: false,
+      description: 'Stack and clear lines',
+      available: true,
     },
   ];
 

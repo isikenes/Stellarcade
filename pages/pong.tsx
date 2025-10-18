@@ -230,7 +230,7 @@ export default function Pong() {
     try {
       await submitScore(walletAddress, username, score * 10, 'pong');
       setScoreSubmitted(true);
-      setTimeout(() => setLeaderboardKey(prev => prev + 1), 2000);
+      setTimeout(() => setLeaderboardKey(prev => prev + 1), 2500);
     } catch (error) {
       setScoreSubmitted(false);
     } finally {
