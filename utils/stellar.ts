@@ -6,8 +6,9 @@ const NETWORK = 'TESTNET';
 const NETWORK_PASSPHRASE = StellarSdk.Networks.TESTNET;
 const SOROBAN_RPC_URL = 'https://soroban-testnet.stellar.org';
 
-// Contract ID - Replace this after deployment
-export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || 'YOUR_CONTRACT_ID_HERE';
+// Contract ID - Hardcoded for public use
+// Everyone uses this same contract deployed on Stellar Testnet
+export const CONTRACT_ID = 'CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB';
 
 // Initialize Soroban Server
 const sorobanServer = new StellarSdk.SorobanRpc.Server(SOROBAN_RPC_URL);

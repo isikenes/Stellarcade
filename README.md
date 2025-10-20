@@ -58,8 +58,6 @@ Stellarcade/
 
 ### Prerequisites
 - Node.js 18+ and npm
-- Rust and Cargo
-- Stellar CLI (`stellar-cli`)
 - Freighter Wallet browser extension
 
 ### 1. Install Dependencies
@@ -68,7 +66,23 @@ Stellarcade/
 npm install
 ```
 
-### 2. Build the Smart Contract
+### 2. Run Development Server
+
+```powershell
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+**That's it!** The contract ID is hardcoded, so everyone uses the same deployed contract on Stellar Testnet.
+
+---
+
+## 🔧 For Developers: Contract Development
+
+If you want to modify and deploy your own contract:
+
+### Build the Smart Contract
 
 Navigate to the contract directory and build:
 
@@ -77,7 +91,7 @@ cd contract
 cargo build --target wasm32-unknown-unknown --release
 ```
 
-### 3. Deploy to Testnet
+### Deploy to Testnet
 
 Deploy the contract using Stellar CLI:
 
@@ -88,23 +102,9 @@ stellar contract deploy --wasm target\wasm32-unknown-unknown\release\arcade_rewa
 
 This will return a contract ID like: `CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB`
 
-### 4. Configure Environment
+### Update Contract ID
 
-Create `.env.local` file in the root directory:
-
-```bash
-NEXT_PUBLIC_CONTRACT_ID=YOUR_CONTRACT_ID_HERE
-```
-
-Replace `YOUR_CONTRACT_ID_HERE` with the contract ID from step 3.
-
-### 5. Run Development Server
-
-```powershell
-npm run dev
-```
-
-Open [http://localhost:3001](http://localhost:3001) in your browser.
+Edit `utils/stellar.ts` and update the `CONTRACT_ID` constant with your new contract ID.
 
 ## 🎮 How to Play
 
@@ -159,7 +159,9 @@ Returns the last player who submitted a score for a game.
 - **Network**: Stellar Testnet
 - **Horizon URL**: https://horizon-testnet.stellar.org
 - **Soroban RPC**: https://soroban-testnet.stellar.org
-- **Current Contract**: `CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB`
+- **Contract ID**: `CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB` (hardcoded in `utils/stellar.ts`)
+
+**Note**: The contract ID is hardcoded in the application. Everyone uses the same shared contract, so all players compete on the same global leaderboards!
 
 ## 🧪 Testing the Contract
 
