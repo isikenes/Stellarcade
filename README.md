@@ -160,6 +160,7 @@ Returns the last player who submitted a score for a game.
 - **Horizon URL**: https://horizon-testnet.stellar.org
 - **Soroban RPC**: https://soroban-testnet.stellar.org
 - **Contract ID**: `CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB` (hardcoded in `utils/stellar.ts`)
+- **View on Stellar Expert:** [https://stellar.expert/explorer/testnet/contract/CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB](https://stellar.expert/explorer/testnet/contract/CBAPPJI3RDC2EVGSBAY6PR77DSPY5X6OOS4RW72PPYLG5RREOWMMOUSB)
 
 **Note**: The contract ID is hardcoded in the application. Everyone uses the same shared contract, so all players compete on the same global leaderboards!
 
